@@ -142,13 +142,12 @@ const build = gulp.series(clean, copy, minify, compress, stylesBuild);
 
 exports.build = build;
 
-// Build & Start
+// Build 
+const build = gulp.series(build);
 
-const startBuild = gulp.series(build, serverBuild);
+exports.build = build;
 
-exports.startBuild = startBuild;
-
-// Source & Start
+// Start Source
 
 const startSource = gulp.series(serverSource, watcherSource);
 
