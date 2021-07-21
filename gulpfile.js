@@ -15,6 +15,7 @@ const pipeline = require("readable-stream").pipeline;
 
 const sync = require("browser-sync").create();
 
+const imagemin = require("gulp-imagemin");
 const del = require("del");
 
 // Styles Source
@@ -44,6 +45,7 @@ const stylesBuild = () => {
     .pipe(rename("style.min.css"))
     .pipe(sourcemap.write("."))
     .pipe(gulp.dest("build/css"))
+    .pipe(sync.stream());
 };
 
 exports.stylesBuild = stylesBuild;
@@ -110,6 +112,22 @@ const watcherSource = () => {
 
 exports.watcherSource = gulp.series(stylesSource, serverSource, watcherSource);
 
+// Image Optimization
+
+const images = () => {
+  return gulp
+    .src("source/img/**/**/*.{jpg,png,svg}")
+    .pipe(
+      imagemin([
+        imagemin.optipng({ optimizationLevel: 3 }),
+        imagemin.mozjpeg({ progressive: true }),
+        imagemin.svgo(),
+      ]).pipe(gulp.dest("build/img"))
+    );
+};
+
+exports.images = images;
+
 // Copy
 
 const clean = () => {
@@ -138,11 +156,18 @@ const copy = () => {
 exports.copy = copy;
 
 // Build
-const build = gulp.series(clean, copy, minify, compress, stylesBuild);
+
+const build = gulp.series(clean, copy, images, minify, compress, stylesBuild);
 
 exports.build = build;
 
-// Start Source
+// Build & Start
+
+const startBuild = gulp.series(build, serverBuild);
+
+exports.startBuild = startBuild;
+
+// Source & Start
 
 const startSource = gulp.series(serverSource, watcherSource);
 
